@@ -10,7 +10,8 @@ public class Run extends Thread {
 
     // Gerar o numero da fatura
     private static int n = 0;
-
+    private static Connection connection;
+    private static Populate p;
     private static synchronized int next() {
         return n++;
     }
@@ -53,68 +54,67 @@ public class Run extends Thread {
     public void run() {
 
         Random r = new Random();
-        Populate p = new Populate();
+        try{
+            connection.setAutoCommit(false);
+            while(true) {
 
-        while(true) {
+                long antes = System.nanoTime();
 
-            long antes = System.nanoTime();
+                // EXECUTAR OP! (switch, executeQuery, ...)
+                ResultSet rs = null;
+                switch (/*r.nextInt(3)*/5) {
+                    case 0:
+                        Random prod = new Random();
+                        Random cli = new Random();
+                        p.sell(next(), prod.nextInt(1024), cli.nextInt(1024));
+                        break;
+                    case 1:
+                        Random cliente = new Random();
+                        rs = p.account(cliente.nextInt(1024));
 
-            // EXECUTAR OP! (switch, executeQuery, ...)
-            ResultSet rs = null;
-            switch (r.nextInt(3)){
-                case 0:
-                    Random prod = new Random();
-                    Random cli = new Random();
-                    p.sell(next(),prod.nextInt(1024),cli.nextInt(1024));
-                    break;
-                case 1:
-                    Random cliente = new Random();
-                    rs = p.account(cliente.nextInt(1024));
-                    try{
-                        while(rs.next()){
-                            //System.out.println(rs.getString(1));
-                        }
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                    break;
-                case 2:
-                    p.topTen();
-                    break;
-                default:
-                    break;
+                        break;
+                    case 2:
+                        rs = p.topTen();
+                        break;
+                    default:
+                        break;
+                }
+                connection.commit();
+                long depois = System.nanoTime();
+                regista(antes, depois);
             }
-            /*
+
+        }catch(Exception e) {
             try {
-                Thread.sleep(r.nextInt(2000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }*/
-            // ---
-
-            long depois = System.nanoTime();
-            regista(antes, depois);
-
+                connection.rollback();
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
         }
-
     }
 
     public static void main(String[] args) throws Exception {
-        Populate p = new Populate();
-        p.populate();
-        for (int j = 0; j < 1; j++) {
-            new Run().start();
+        try{
+            connection = DriverManager.getConnection("jdbc:postgresql://localhost/invoices");
+            p = new Populate(connection);
+            p.populate();
+            for (int j = 0; j < 16; j++) {
+                new Run().start();
+            }
+
+            Thread.sleep(5000);
+
+            partida();
+
+            Thread.sleep(10000);
+
+            imprime();
+
+            System.exit(0);
+        }catch (Exception e){
+            e.printStackTrace();
         }
 
-        Thread.sleep(5000);
-
-        partida();
-
-        Thread.sleep(10000);
-
-        imprime();
-
-        System.exit(0);
 
     }
 }
