@@ -1,0 +1,23 @@
+* Terminal 1 *
+(NOTA!!!! Estes comandos poderão estar em: /usr/lib/postgresql/9.1/bin/...)
+initdb -D dados
+postgres -D dados/ -k.
+
+* Terminal 2 *
+createdb -h localhost invoices
+psql -h localhost invoices
+
+* No pom.xml *
+
+    <dependencies>
+        <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.1-901-1.jdbc4</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+* No Java *
+
+URL de JDBC: jdbc:postgresql://localhost/invoices
