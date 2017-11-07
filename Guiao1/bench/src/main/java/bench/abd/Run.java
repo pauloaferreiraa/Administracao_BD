@@ -62,11 +62,11 @@ public class Run extends Thread {
 
                 // EXECUTAR OP! (switch, executeQuery, ...)
                 ResultSet rs = null;
-                switch (/*r.nextInt(3)*/5) {
+                switch (/*r.nextInt(3)*/0) {
                     case 0:
                         Random prod = new Random();
                         Random cli = new Random();
-                        p.sell(next(), prod.nextInt(1024), cli.nextInt(1024));
+                        p.sell(cli.nextInt(1024));
                         break;
                     case 1:
                         Random cliente = new Random();
@@ -98,7 +98,7 @@ public class Run extends Thread {
             connection = DriverManager.getConnection("jdbc:postgresql://localhost/invoices");
             p = new Populate(connection);
             p.populate();
-            for (int j = 0; j < 16; j++) {
+            for (int j = 0; j < 1; j++) {
                 new Run().start();
             }
 

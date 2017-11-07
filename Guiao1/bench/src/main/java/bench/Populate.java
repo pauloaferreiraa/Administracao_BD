@@ -9,6 +9,7 @@ public class Populate {
     private Statement s;
     private int n = 10;
     private int MAX = (int) Math.pow(2,n);
+    private Random rand = new Random();
 
     public Populate(Connection c){
         try {
@@ -32,19 +33,15 @@ public class Populate {
     public void populate(){
         try {
 
-
-            Random rand = new Random();
-
             s.executeUpdate("create table client (id int, nome varchar, addr varchar);");
             s.executeUpdate("create table product (id int, descricao varchar, stock int, min int, max int);");
-            s.executeUpdate("create table invoice (id int, id_cliente int);");
-            s.executeUpdate("create table InvoiceLine (id int, InvoiceId int, ProductId int);");
+            s.executeUpdate("create table invoice (id serial, id_cliente int);");
+            s.executeUpdate("create table InvoiceLine (id serial, InvoiceId int, ProductId int);");
             s.executeUpdate("create table encomenda (id int,productid int, supplier int, items int);");
 
 
             int prod_id = 0, cli_id = 0;
-            Random r = new Random();
-            System.out.println(MAX);
+            //System.out.println(MAX);
             PreparedStatement ps_cliente = c.prepareStatement("insert into client values (?,?,?)");
             PreparedStatement ps_product = c.prepareStatement("insert into product values (?,?,?,?,?)");
             for (int i = 0;i<MAX;i++) {
@@ -53,7 +50,7 @@ public class Populate {
                 ps_cliente.setInt(1,cli_id); ps_cliente.setString(2,"cli " + cli_id);
                 ps_cliente.setString(3,"endereço " + cli_id);
 
-                int stock = r.nextInt(15) + 1, min = 1, max = r.nextInt(15) + 17;
+                int stock = rand.nextInt(15) + 1, min = 1, max = rand.nextInt(15) + 17;
 
                 ps_product.setInt(1,prod_id); ps_product.setString(2,"produto " + prod_id);
                 ps_product.setInt(3,stock); ps_product.setInt(4,min); ps_product.setInt(5,max);
@@ -82,10 +79,26 @@ public class Populate {
         }
     }
 
-    public void sell(int invoice, int produto, int cliente){
+    public void sell(int cliente){
         try {
+            PreparedStatement ps_invoice = c.prepareStatement("insert into invoice (id_cliente) values (?)",Statement.RETURN_GENERATED_KEYS);
+            ps_invoice.setInt(1,cliente);
+            ps_invoice.executeUpdate();
+            ResultSet rs_invoice  = ps_invoice.getGeneratedKeys();
 
-            s.executeUpdate("insert into faturas values (" + invoice + ","+ produto +"," + cliente +");");
+            int invoice = 0;
+            if(rs_invoice.next()){
+                invoice = rs_invoice.getInt(1);
+            }
+            int invoice_lines = rand.nextInt(10) + 1;
+
+            PreparedStatement ps_inline = c.prepareStatement("insert into InvoiceLine (InvoiceId, ProductId) values (?,?)");
+            for(int i = 0;i<invoice_lines;i++){
+                int product = rand.nextInt(MAX) | rand.nextInt(MAX);
+                ps_inline.setInt(1,invoice);
+                ps_inline.setInt(2,product);
+                ps_inline.executeUpdate();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
