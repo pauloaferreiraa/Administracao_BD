@@ -9,7 +9,7 @@ import java.util.Random;
 public class Populate {
     private static Connection c;
     private static Statement s;
-    private static int n = 2;
+    private static int n = 10;
     private static int MAX = (int) Math.pow(2,n);
     private static Random rand = new Random();
 

@@ -7,7 +7,7 @@ import java.util.Random;
 public class Operation {
     private Connection c;
     private Statement s;
-    private int n = 2;
+    private int n = 10;
     private int MAX = (int) Math.pow(2,n);
     private Random rand = new Random();
 
@@ -53,22 +53,29 @@ public class Operation {
         try {
             PreparedStatement ps_invoice = c.prepareStatement("insert into invoice (id_cliente) values (?)",Statement.RETURN_GENERATED_KEYS);
             ps_invoice.setInt(1,cliente);
-            ps_invoice.executeUpdate();
-            ResultSet rs_invoice  = ps_invoice.getGeneratedKeys();
 
-            int invoice = 0;
-            if(rs_invoice.next()){
-                invoice = rs_invoice.getInt(1);
-            }
             int invoice_lines = rand.nextInt(10) + 1;
-
+            boolean inserted = false;
             PreparedStatement ps_inline = c.prepareStatement("insert into InvoiceLine (InvoiceId, ProductId) values (?,?)");
+
             for(int i = 0;i<invoice_lines;i++){
                 int product = rand.nextInt(MAX) | rand.nextInt(MAX);
                 if(!checkProductStock(product,1)){
                     continue;
+                }else{
+                    if(!inserted){
+                        ps_invoice.executeUpdate();
+                        ResultSet rs_invoice  = ps_invoice.getGeneratedKeys();
+
+                        int invoice = 0;
+                        if(rs_invoice.next()){
+                            invoice = rs_invoice.getInt(1);
+                        }
+                        ps_inline.setInt(1,invoice);
+                        inserted = true;
+                    }
                 }
-                ps_inline.setInt(1,invoice);
+
                 ps_inline.setInt(2,product);
                 ps_inline.executeUpdate();
                 PreparedStatement ps = c.prepareStatement("update product set stock = stock - 1 where id = ?");
@@ -84,9 +91,9 @@ public class Operation {
     public ResultSet account(int cliente){
         ResultSet rs = null;
         try {
-
-            rs = s.executeQuery(
-                    "select descricao from faturas join produto on (faturas.id_produto = produto.id) where id_cliente ="+ cliente +";");
+            PreparedStatement ps = c.prepareStatement("select productid from invoice inner join invoiceline on (invoice.id = invoiceid) where id_cliente = ?");
+            ps.setInt(1,cliente);
+            rs = ps.executeQuery();
 
         } catch (Exception e) {
             e.printStackTrace();

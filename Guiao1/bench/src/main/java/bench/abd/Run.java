@@ -61,7 +61,7 @@ public class Run extends Thread {
 
                 // EXECUTAR OP! (switch, executeQuery, ...)
                 ResultSet rs = null;
-                switch (/*r.nextInt(3)*/0) {
+                switch (r.nextInt(2)) {
                     case 0:
                         Random prod = new Random();
                         Random cli = new Random();
@@ -70,7 +70,9 @@ public class Run extends Thread {
                     case 1:
                         Random cliente = new Random();
                         rs = o.account(cliente.nextInt(1024));
-
+                        while(rs.next()){
+                            System.out.println(rs.getInt(1));
+                        }
                         break;
                     case 2:
                         o.topTen();
