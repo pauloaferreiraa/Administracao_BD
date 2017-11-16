@@ -1,7 +1,6 @@
 package bench.abd;
 
-import bench.Populate;
-import com.sun.org.apache.bcel.internal.generic.POP;
+//import bench.Populate;
 
 import java.sql.*;
 import java.util.Random;
@@ -11,7 +10,7 @@ public class Run extends Thread {
     // Gerar o numero da fatura
     private static int n = 0;
     private static Connection connection;
-    private static Populate p;
+    private static Operation o;
     private static synchronized int next() {
         return n++;
     }
@@ -66,15 +65,15 @@ public class Run extends Thread {
                     case 0:
                         Random prod = new Random();
                         Random cli = new Random();
-                        p.sell(cli.nextInt(1024));
+                        o.sell(cli.nextInt(1024));
                         break;
                     case 1:
                         Random cliente = new Random();
-                        rs = p.account(cliente.nextInt(1024));
+                        rs = o.account(cliente.nextInt(1024));
 
                         break;
                     case 2:
-                        rs = p.topTen();
+                        o.topTen();
                         break;
                     default:
                         break;
@@ -95,9 +94,10 @@ public class Run extends Thread {
 
     public static void main(String[] args) throws Exception {
         try{
+
             connection = DriverManager.getConnection("jdbc:postgresql://localhost/invoices");
-            p = new Populate(connection);
-            p.populate();
+            o = new Operation(connection);
+            //p.populate();
             for (int j = 0; j < 1; j++) {
                 new Run().start();
             }
